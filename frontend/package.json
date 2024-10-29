@@ -1,8 +1,8 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "versionSystem": "5.2.6",
-  "nomeEmpresa": "Whaticket SaaS",
+  "nomeEmpresa": "ZAP5",
   "private": true,
   "dependencies": {
     "@date-io/date-fns": "^2.14.0",
