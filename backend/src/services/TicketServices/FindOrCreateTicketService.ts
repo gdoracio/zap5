@@ -26,21 +26,19 @@ const FindOrCreateTicketService = async (
         [Op.or]: ["open", "pending", "closed"]
       },
       contactId: groupContact ? groupContact.id : contact.id,
-      companyId,
-      whatsappId
+      companyId
     },
     order: [["id", "DESC"]]
   });
 
   if (ticket) {
+    // Atualiza o whatsappId sempre que uma nova mensagem chegar
     await ticket.update({ unreadMessages, whatsappId });
-  }
-  
-  if (ticket?.status === "closed") {
-    await ticket.update({ queueId: null, userId: null, whatsappId: null });
-  }
 
-  if (!ticket && groupContact) {
+    if (ticket.status === "closed") {
+      await ticket.update({ queueId: null, userId: null });
+    }
+  } else if (!ticket && groupContact) {
     ticket = await Ticket.findOne({
       where: {
         contactId: groupContact.id
@@ -54,19 +52,21 @@ const FindOrCreateTicketService = async (
         userId: null,
         unreadMessages,
         queueId: null,
-        companyId
+        companyId,
+        whatsappId // Atualiza o whatsappId
       });
+
       await FindOrCreateATicketTrakingService({
         ticketId: ticket.id,
         companyId,
-        whatsappId: ticket.whatsappId,
+        whatsappId,
         userId: ticket.userId
       });
     }
+
     const msgIsGroupBlock = await Setting.findOne({
       where: { key: "timeCreateNewTicket" }
     });
-  
     const value = msgIsGroupBlock ? parseInt(msgIsGroupBlock.value, 10) : 7200;
   }
 
@@ -87,18 +87,20 @@ const FindOrCreateTicketService = async (
         userId: null,
         unreadMessages,
         queueId: null,
-        companyId
+        companyId,
+        whatsappId // Atualiza o whatsappId
       });
+
       await FindOrCreateATicketTrakingService({
         ticketId: ticket.id,
         companyId,
-        whatsappId: ticket.whatsappId,
+        whatsappId,
         userId: ticket.userId
       });
     }
   }
-  
-    const whatsapp = await Whatsapp.findOne({
+
+  const whatsapp = await Whatsapp.findOne({
     where: { id: whatsappId }
   });
 
@@ -112,6 +114,7 @@ const FindOrCreateTicketService = async (
       whatsapp,
       companyId
     });
+
     await FindOrCreateATicketTrakingService({
       ticketId: ticket.id,
       companyId,
